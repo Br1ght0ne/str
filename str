@@ -90,7 +90,7 @@ while getopts "ulbqch" OPT; do
 			RET_URL=1
 			;;
 		l)
-			LIST=${OPTARG}
+			LIST=1
 			;;
 		b)
 			BREV=1
@@ -151,7 +151,7 @@ main() {
 	then
 		echo $url
 		exit 0
-	elif [[ ! $LIST ]]
+	elif [[ -n $LIST ]]
 	then
 		list
 		exit 0
@@ -162,4 +162,4 @@ main() {
 }
 
 configure "$CONF_FILE"
-main
+main "$@"
