@@ -156,7 +156,7 @@ main() {
 		list
 		exit 0
 	else
-		streamlink $url "$quality"
+		nohup streamlink $url "$quality" &>/dev/null &
 		exit 0
 	fi
 }
