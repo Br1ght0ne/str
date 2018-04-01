@@ -1,0 +1,165 @@
+#!/bin/bash
+
+configure() {
+	local CONF_PATH_LIST=( "$HOME"/.config/str/config /etc/str.conf )
+	for path in "${CONF_PATH_LIST[@]}"; do
+		if [ -f "$path" ]; then
+			source "$path"
+			break
+		fi
+	done
+	STREAMERS=${STREAMERS-( )}
+	LIST_FILE=${LIST_FILE-/tmp/str_list}
+}
+
+HELP() {
+	cat <<EOF
+Usage: $(basename $0) [OPTIONS] [SERVICE] [ID] [QUALITY]
+
+Options:
+	-l		list specified STREAMERS
+	-u SERVICE ID	print formatted URL
+	-b		shorten output where possible
+	-q		quiet, don't output info messages
+	-c FILE		use custom configuration FILE
+	-h 		show this help and exit
+
+Supported services:
+	twitch.tv (twitch, tw)
+	youtube.com (youtube, yt)
+
+Copyright 2018 Oleksii Filonenko.
+License GPLv3+: GNU GPL version 3 or later
+<http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+EOF
+	exit 0
+}
+
+list() {
+	rm -f $LIST_FILE
+	for i in "${!STREAMERS[@]}"; do
+		printpos=$(($i + 1))
+		s="${STREAMERS[$i]}"
+		if [ ! $QUIET ]; then
+			tput civis 2>/dev/null
+			printf "Loading list: $s... [$printpos/${#STREAMERS[@]}]\r"
+		fi
+		local url="twitch.tv/$s"
+		youtube-dl -F $url &> /dev/null
+		ret=$?
+		case $ret in
+			0)
+				desc=$(youtube-dl --get-description $url 2>/dev/null)
+				print_streamer "$s" online "$desc"
+				;;
+			*)
+				print_streamer "$s" offline
+				;;
+		esac
+	done
+	tput cvvis 2>/dev/null
+	echo
+	cat $LIST_FILE
+	rm -f $LIST_FILE
+}
+
+print_streamer() {
+	local streamer=$1
+	local status=$2
+	local description=$3
+	if [ $BREV ]; then
+		stat=${status:0:2}
+		if [ "$stat" = "of" ]; then
+			stat=off
+		fi
+		output="$streamer ${stat^^}"
+	else
+		output="$streamer is $status"
+		if [ -n "$description" ]; then
+			output+=": $description"
+		fi
+	fi
+	echo "$output" >> $LIST_FILE
+}
+
+while getopts "ulbqch" OPT; do
+	case ${OPT} in
+		u)
+			RET_URL=1
+			;;
+		l)
+			LIST=${OPTARG}
+			;;
+		b)
+			BREV=1
+			;;
+		q)
+			QUIET=1
+			;;
+		c)
+			CONF_FILE=${OPTARG}
+			;;
+		h)
+			HELP
+			;;
+	esac
+done
+shift $((OPTIND-1))
+
+main() {
+	service="$1"
+	nick="$2"
+	quality="$3"
+
+	if [ -n "$service" ]; then
+		case "$service" in
+			"tw" | "twitch")
+				host="twitch.tv"
+				;;
+			"yt" | "youtube")
+				host="youtube.com"
+				;;
+			*)
+				>2 printf "Wrong service: %s. Setting to twitch.tv.\n" "$service"
+				host="twitch.tv"
+				;;
+		esac
+	else
+		host="twitch.tv"
+	fi
+
+	if [ -z "$quality" ]; then
+		quality="best"
+	fi
+
+	case "$nick" in
+		"baumi")
+			nick="l34um1"
+			;;
+		"gog")
+			nick="gogcom"
+			;;
+		*)
+			;;
+	esac
+
+	url="$host"/"$nick" 
+
+	if [[ -n $RET_URL ]]
+	then
+		echo $url
+		exit 0
+	elif [[ ! $LIST ]]
+	then
+		list
+		exit 0
+	else
+		streamlink $url "$quality"
+		exit 0
+	fi
+}
+
+configure "$CONF_FILE"
+main
