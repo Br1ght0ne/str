@@ -1,0 +1,67 @@
+.TH STR 1
+.SH NAME
+str \- simplify streamlink and youtube-dl usage
+.SH SYNOPSIS
+.B str
+[\fIOPTIONS\fR]
+[\fISERVICE\fR]
+[\fIID\fR]
+[\fIQUALITY\fR]
+.SS Supported services
+twitch.tv (twitch, tw)
+
+youtube.com (youtube, yt)
+.SH OPTIONS
+.TP
+.B \-l
+List, output statuses of set STREAMERS.
+.TP
+.B \-u
+Print URL made from \fBSERVICE\fR and \fBID\fR to \fBSTDOUT\fR.
+.TP
+.B \-b
+Brief, shorten output where possible.
+.TP
+.B \-q
+Quiet, don't output info messages.
+.TP
+.B \-c \fIFILE\fR
+Use custom configuration \fIFILE\fR.
+.TP
+.B \-h
+Print help message and exit.
+.SH CONFIGURATION
+.TP
+.B STREAMERS
+Array of twitch.tv usernames to use in listing commands.
+.TP
+.B LIST_FILE
+Path to temporary file where list is stored before printing.
+.SH FILES
+By default \fBstr\fR uses \fB$XDG_CONFIG_HOME/str/config\fR and \fB/etc/str.conf\fR, in that order.
+.SH EXAMPLES
+Stream GOG Team on Twitch in best possible quality:
+.RS
+$ str twitch gogcom best
+.RE
+.PP
+Show a brief and quiet list:
+.nf
+.RS
+$ str -lqb
+l34um1 OFF
+gogcom ON
+.RE
+.fi
+.PP
+Show a full list:
+.nf
+.RS
+$ str -l
+Loading list: gogcom... [2/2]
+l34um1 is offline
+gogcom is online: At Least It's SUPPOSED To Sink with DarkSaber2k
+.RE
+.fi
+.SH AUTHOR
+Oleksii Filonenko (\fIhttps://github.com/filalex77\fR)
