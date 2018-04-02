@@ -17,17 +17,20 @@ configure() {
 HELP() {
 	cat <<EOF
 Usage:
- $NAME [options] [service] [id] [quality]
+  $NAME [SERVICE] [ID] [QUALITY]
+  $NAME -l [OPTIONS]
+  $NAME -u [SERVICE] [ID]
 
 A simple wrapper over streamlink.
 
 Options:
- -l, --list		list specified STREAMERS
- -u, --url		print formatted URL
- -b, --brief		shorten output where possible
- -q, --quiet		quiet, don't output info messages
- -c, --conf <file>	use custom configuration FILE
- -h, --help 		show this help and exit
+  -l, --list		list specified STREAMERS
+  -u, --url		print formatted URL
+  -h, --help 		show this help and exit
+
+--list options:
+  -b, --brief		shorten output where possible
+  -q, --quiet		quiet, don't output info messages
 
 Supported services:
 	twitch.tv (twitch, tw)
@@ -60,7 +63,7 @@ list() {
 			*)
 				print_streamer "$s" offline
 				;;
-		esac
+	esac
 	done
 	tput cvvis 2>/dev/null
 	[[ ! $QUIET ]] && echo
@@ -77,17 +80,17 @@ print_streamer() {
 		if [ "$stat" = "of" ]; then
 			stat=off
 		fi
-		output="$streamer ${stat^^}"
+		output="${streamer}|${stat^^}"
 	else
 		output="$streamer is $status"
 		if [ -n "$description" ]; then
 			output+=": $description"
 		fi
 	fi
-	echo "$output" >> $LIST_FILE
+	(printf "${output}\n" | tr '|' '\t') >> $LIST_FILE
 }
 
-options=$(getopt -o lubqc:h --long list,url,brief,quiet,config,help: -n "$NAME" -- "$@")
+options=$(getopt -o lubqhc: --long list,url,brief,quiet,help,config: -n "$NAME" -- "$@")
 [[ "$options" = ' --' ]] && HELP
 eval set -- "$options"
 while true; do

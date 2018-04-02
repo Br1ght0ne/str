@@ -3,57 +3,54 @@
 _str_qualities() {
 	case $words[2] in
 		twitch | tw)
-			local url=$(str -u $words[2] $words[3])
+			local url=$(str -uq $words[2] $words[3])
 			;;
 		youtube | yt)
 			local url="$words[3]"
 			;;
 	esac
-	qualities=$(youtube-dl "$url" -F --no-warnings \
+	qualities=$(youtube-dl "$url" -F --no-warnings 2>/dev/null \
 		| tail +6 \
-		| awk '{printf "%s ", $1}' \
-		| sed 's/__source_//')
+		| awk '{printf "%s ", $1}' 2>/dev/null \
+		| sed 's/__source_//' 2>/dev/null)
 }
 
-_str() {
-	local curcontext="$curcontext" state line
-	typeset -A opt_args
+local arguments
 
-	local CONF_PATH_LIST=( "$HOME"/.config/str/config /etc/str.conf )
-	for path in "${CONF_PATH_LIST[@]}"; do
-		if [ -f "$path" ]; then
-			source "$path"
-			break
-		fi
-	done
-	STREAMERS=${STREAMERS-( )}
-	LIST_FILE=${LIST_FILE-/tmp/str_list}
+listargs=(
+  '(-b --brief)'{-b,--brief}"[shorten output where possible]"
+  '(-q --quiet)'{-q,--quiet}"[don't output error messages]"
+)
 
+arguments=(
+  '(-l --list)'{-l,--list}'[list specified STREAMERS]: :->list' 
+  '(-c --conf)'{-c,--conf}'[use custom configuration FILE]:file:->file' 
+  '(-u --url)'{-u,--url}'[print formatted URL]' 
+  '(-h --help)'{-h,--help}'[show help and exit]' 
+)
 
-	_arguments \
-		"1: :->service"\
-		"2: :->nick"\
-		"3: :->quality"
+local curcontext="$curcontext" state state_descr line
+typeset -A opt_args
 
-	case $state in
-		service)
-			_arguments "1:service:(twitch youtube)"
-			;;
-		nick)
-			case $words[2] in
-				twitch | tw)
-					_arguments "2:nick:($STREAMERS)"
-					;;
-				youtube | yt)
-					_arguments "2:url or id:"
-					;;
-			esac
-			;;
-		quality)
-			_str_qualities
-			_arguments "3:quality:($qualities)"
-			;;
-	esac
-}
+_arguments -C -s \
+	$arguments
 
-_str "$@"
+case $state in
+	list)
+		_arguments -C -s \
+			$listargs
+		;;
+	stream)
+		source "$HOME/.config/str/config"
+		_arguments \
+			'1:service:(twitch youtube)' \
+			"2:id:($STREAMERS)" 
+		;;
+	file)
+		_files -W "$HOME" && ret=0
+		;;
+	quality)
+		_str_qualities
+		_arguments ":quality:($qualities)"
+		;;
+esac
