@@ -16,25 +16,27 @@ configure() {
 
 HELP() {
 	cat <<EOF
-Usage: $NAME [OPTIONS] [SERVICE] [ID] [QUALITY]
+Usage:
+ $NAME [options] [service] [id] [quality]
+
+A simple wrapper over streamlink.
 
 Options:
-	-l		list specified STREAMERS
-	-u SERVICE ID	print formatted URL
-	-b		shorten output where possible
-	-q		quiet, don't output info messages
-	-c FILE		use custom configuration FILE
-	-h 		show this help and exit
+ -l, --list		list specified STREAMERS
+ -u, --url		print formatted URL
+ -b, --brief		shorten output where possible
+ -q, --quiet		quiet, don't output info messages
+ -c, --conf <file>	use custom configuration FILE
+ -h, --help 		show this help and exit
 
 Supported services:
 	twitch.tv (twitch, tw)
 	youtube.com (youtube, yt)
 
+For more details see str(1).
+
 Copyright 2018 Oleksii Filonenko.
-License GPLv3+: GNU GPL version 3 or later
-<http://gnu.org/licenses/gpl.html>
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
+This program is distributed under the MIT license.
 EOF
 	exit 0
 }
@@ -85,7 +87,7 @@ print_streamer() {
 	echo "$output" >> $LIST_FILE
 }
 
-options=$(getopt -o lubqch: --long list,url,brief,quiet,config,help: -n "$NAME" -- "$@")
+options=$(getopt -o lubqc:h --long list,url,brief,quiet,config,help: -n "$NAME" -- "$@")
 [[ "$options" = ' --' ]] && HELP
 eval set -- "$options"
 while true; do
