@@ -133,17 +133,6 @@ main() {
 		quality="best"
 	fi
 
-	case "$nick" in
-		"baumi")
-			nick="l34um1"
-			;;
-		"gog")
-			nick="gogcom"
-			;;
-		*)
-			;;
-	esac
-
 	url="$host"/"$nick" 
 
 	if [[ -n $RET_URL ]]
