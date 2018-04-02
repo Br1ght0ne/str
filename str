@@ -83,7 +83,7 @@ print_streamer() {
 	echo "$output" >> $LIST_FILE
 }
 
-while getopts "ulbqch" OPT; do
+while getopts "ulbqcsh" OPT; do
 	case ${OPT} in
 		u)
 			RET_URL=1
@@ -99,6 +99,12 @@ while getopts "ulbqch" OPT; do
 			;;
 		c)
 			CONF_FILE=${OPTARG}
+			;;
+		s)
+			set -a
+			configure
+			set +a
+			exit 0
 			;;
 		h)
 			HELP
