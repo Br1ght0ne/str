@@ -1,5 +1,7 @@
 #!/bin/bash
 
+NAME=$(basename $0)
+
 configure() {
 	local CONF_PATH_LIST=( "$HOME"/.config/str/config /etc/str.conf )
 	for path in "${CONF_PATH_LIST[@]}"; do
@@ -14,25 +16,30 @@ configure() {
 
 HELP() {
 	cat <<EOF
-Usage: $(basename $0) [OPTIONS] [SERVICE] [ID] [QUALITY]
+Usage:
+  $NAME [SERVICE] [ID] [QUALITY]
+  $NAME -l [OPTIONS]
+  $NAME -u [SERVICE] [ID]
+
+A simple wrapper over streamlink.
 
 Options:
-	-l		list specified STREAMERS
-	-u SERVICE ID	print formatted URL
-	-b		shorten output where possible
-	-q		quiet, don't output info messages
-	-c FILE		use custom configuration FILE
-	-h 		show this help and exit
+  -l, --list		list specified STREAMERS
+  -u, --url		print formatted URL
+  -h, --help 		show this help and exit
+
+--list options:
+  -b, --brief		shorten output where possible
+  -q, --quiet		quiet, don't output info messages
 
 Supported services:
 	twitch.tv (twitch, tw)
 	youtube.com (youtube, yt)
 
+For more details see str(1).
+
 Copyright 2018 Oleksii Filonenko.
-License GPLv3+: GNU GPL version 3 or later
-<http://gnu.org/licenses/gpl.html>
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
+This program is distributed under the MIT license.
 EOF
 	exit 0
 }
@@ -56,7 +63,7 @@ list() {
 			*)
 				print_streamer "$s" offline
 				;;
-		esac
+	esac
 	done
 	tput cvvis 2>/dev/null
 	[[ ! $QUIET ]] && echo
@@ -73,45 +80,50 @@ print_streamer() {
 		if [ "$stat" = "of" ]; then
 			stat=off
 		fi
-		output="$streamer ${stat^^}"
+		output="${streamer}|${stat^^}"
 	else
 		output="$streamer is $status"
 		if [ -n "$description" ]; then
 			output+=": $description"
 		fi
 	fi
-	echo "$output" >> $LIST_FILE
+	(printf "${output}\n" | tr '|' '\t') >> $LIST_FILE
 }
 
-while getopts "ulbqcsh" OPT; do
-	case ${OPT} in
-		u)
-			RET_URL=1
-			;;
-		l)
+options=$(getopt -o lubqhc: --long list,url,brief,quiet,help,config: -n "$NAME" -- "$@")
+[[ "$options" = ' --' ]] && HELP
+eval set -- "$options"
+while true; do
+	case "$1" in
+		-l | --list)
 			LIST=1
 			;;
-		b)
+		-u | --url)
+			RET_URL=1
+			;;
+		-b | --brief)
 			BREV=1
 			;;
-		q)
+		-q | --quiet)
 			QUIET=1
 			;;
-		c)
-			CONF_FILE=${OPTARG}
+		-c | --config)
+			shift
+			CONF_FILE="$1"
 			;;
-		s)
-			set -a
-			configure
-			set +a
-			exit 0
-			;;
-		h)
+		-h | --help)
 			HELP
 			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			break
+			;;
 	esac
+	shift
 done
-shift $((OPTIND-1))
 
 main() {
 	service="$1"
