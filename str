@@ -39,13 +39,12 @@ EOF
 
 list() {
 	rm -f $LIST_FILE
+	[[ ! $QUIET ]] && >&2 printf "Loading list..."
 	for i in "${!STREAMERS[@]}"; do
+		[[ ! $QUIET ]] && >&2 printf '.'
 		printpos=$(($i + 1))
 		s="${STREAMERS[$i]}"
-		if [ ! $QUIET ]; then
-			tput civis 2>/dev/null
-			printf "Loading list: $s... [$printpos/${#STREAMERS[@]}]\r"
-		fi
+		[[ ! $QUIET ]] && tput civis 2>/dev/null
 		local url="twitch.tv/$s"
 		youtube-dl -F $url &> /dev/null
 		ret=$?
@@ -60,7 +59,7 @@ list() {
 		esac
 	done
 	tput cvvis 2>/dev/null
-	echo
+	[[ ! $QUIET ]] && echo
 	cat $LIST_FILE
 	rm -f $LIST_FILE
 }
