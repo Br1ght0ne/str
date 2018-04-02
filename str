@@ -51,7 +51,6 @@ list() {
 		[[ ! $QUIET ]] && >&2 printf '.'
 		printpos=$(($i + 1))
 		s="${STREAMERS[$i]}"
-		[[ ! $QUIET ]] && tput civis 2>/dev/null
 		local url="twitch.tv/$s"
 		youtube-dl -F $url &> /dev/null
 		ret=$?
@@ -65,7 +64,6 @@ list() {
 				;;
 	esac
 	done
-	tput cvvis 2>/dev/null
 	[[ ! $QUIET ]] && echo
 	cat $LIST_FILE
 	rm -f $LIST_FILE
